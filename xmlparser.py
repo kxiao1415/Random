@@ -5,22 +5,22 @@ import argparse
 from HTMLParser import HTMLParser
 
 
-# TRANSLATIONS = {"\xc5\xbf": "s",
-#                 "\xc5\x93": "oe",
-#                 "\xc5\x8e": "o",
-#                 "\xc3\x86": "Ae",
-#                 "\xc3\xa6": "ae",
-#                 "\xc3\xa9": "e",
-#                 "\xc3\xb1": "n",
-#                 "\xc3\xb3": "o",
-#                 "\xc3\xb4": "o",
-#                 "\xc4\x93": "e",
-#                 "\xc3\xa3": "a",
-#                 "\xc3\xa7": "c",
-#                 "\xc3\xb5": "o",
-#                 "\xc3\xba": "u",
-#                 "\xc3\xa9": "e",
-#                 "\xc3\xa1": "a"}
+TRANSLATIONS = {"\xc5\xbf": "s",
+                "\xc5\x93": "oe",
+                "\xc5\x8e": "o",
+                "\xc3\x86": "Ae",
+                "\xc3\xa6": "ae",
+                "\xc3\xa9": "e",
+                "\xc3\xb1": "n",
+                "\xc3\xb3": "o",
+                "\xc3\xb4": "o",
+                "\xc4\x93": "e",
+                "\xc3\xa3": "a",
+                "\xc3\xa7": "c",
+                "\xc3\xb5": "o",
+                "\xc3\xba": "u",
+                "\xc3\xa9": "e",
+                "\xc3\xa1": "a"}
 
 
 def cleanUpMatch(match):
@@ -39,8 +39,8 @@ def cleanUpMatch(match):
     # remove everything between '<>'
     match = re.sub(r'<.*?>', '', match)
     
-    # for char in TRANSLATIONS:
-    #     match = match.replace(char, TRANSLATIONS[char])
+     for char in TRANSLATIONS:
+         match = match.replace(char, TRANSLATIONS[char])
     
     # remove extra white spaces
     match = ' '.join(match.split())
@@ -65,7 +65,7 @@ def xmlParser(file, tag):
     for file in files:
         with open(file, 'r') as f:
             data = f.read()
-            pattern = '<{0}.*?>(.*?)</{1}>'.format(tag, tag)
+            pattern = '<{0}.*?>(.*?)</{0}>'.format(tag)
             for match in re.compile(pattern, re.DOTALL).finditer(data):
                 print_num -=1
                 cleanMatch = cleanUpMatch(match.group())

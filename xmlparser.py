@@ -22,6 +22,10 @@ TRANSLATIONS = {"\xc5\xbf": "s",
                 "\xc3\xa9": "e",
                 "\xc3\xa1": "a"}
 
+def excludeSection(data,section):
+    dat = re.sub(r'<{0}.*>.*</{0}>'.format(section), '', data, re.DOTALL)
+    #re.sub('<{0}.*?>.*</{0}>'.format(sections),'', work, flags=re.DOTALL)
+    return dat
 
 def cleanUpMatch(match):
     # remove everything between double line breaks
@@ -39,7 +43,7 @@ def cleanUpMatch(match):
     # remove everything between '<>'
     match = re.sub(r'<.*?>', '', match)
     
-     for char in TRANSLATIONS:
+    for char in TRANSLATIONS:
          match = match.replace(char, TRANSLATIONS[char])
     
     # remove extra white spaces
@@ -52,19 +56,27 @@ def cleanUpMatch(match):
     return match.lower()
 
 def getAllFilesToProcess(files, directory):
-    pass
+    if files:
+        return args.files
+    elif directory:
+        return directory #incomplete here
 
 def exportData(dict):
     pass
 
 
-def xmlParser(file, tag):
+def xmlParser(files, tag):
     files = getAllFilesToProcess(args.files, args.directory)
     dict = {}
     
     for file in files:
         with open(file, 'r') as f:
             data = f.read()
+
+            excludeSection(data, 'teiHeader')
+
+            print_num = 50
+
             pattern = '<{0}.*?>(.*?)</{0}>'.format(tag)
             for match in re.compile(pattern, re.DOTALL).finditer(data):
                 print_num -=1
@@ -93,4 +105,4 @@ if __name__ == "__main__":
     if not (args.files or args.directory):
         parser.error("At least a '-f' or a '-d' is required")
     
-    xmlParser(args.file, args.tag)
+    xmlParser(args.files, args.tag)

@@ -130,6 +130,7 @@
 		  1.1.29a of wwp-store DTD. Ready for proofing.</change>
       <change when="1999-05-13" who="p:lmayer.ins">Began capture using emacs with psgml on Unix with version
 		  1.1.29a of wwp-store DTD.</change>
+      <change DAN DID THIS>Testing what happens if I <placeName>MagicPlace</placeName> something</change>
     </revisionDesc>
   </teiHeader>
   <text xml:id="TR00503">

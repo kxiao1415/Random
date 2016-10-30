@@ -23,7 +23,7 @@ TRANSLATIONS = {"\xc5\xbf": "s",
                 "\xc3\xa1": "a"}
 
 def excludeSection(data,section):
-    dat = re.sub(r'<{0}.*>.*</{0}>'.format(section), '', data, re.DOTALL)
+    dat = re.compile('<{0}.*</{0}>'.format(section), re.DOTALL).sub('',data)
     #re.sub('<{0}.*?>.*</{0}>'.format(sections),'', work, flags=re.DOTALL)
     return dat
 
@@ -73,9 +73,11 @@ def xmlParser(files, tag):
         with open(file, 'r') as f:
             data = f.read()
 
-            excludeSection(data, 'teiHeader')
+            data = excludeSection(data, 'teiHeader')
 
-            print_num = 50
+            #print(re.compile('<{0}.*</{0}>'.format('teiHeader'), re.DOTALL).findall(data))
+
+            print_num = 20
 
             pattern = '<{0}.*?>(.*?)</{0}>'.format(tag)
             for match in re.compile(pattern, re.DOTALL).finditer(data):
@@ -85,10 +87,10 @@ def xmlParser(files, tag):
                     dict[cleanMatch] += 1
                 else:
                     dict[cleanMatch] = 1
-    
+
                 if print_num < 500:
                     print cleanMatch
-                
+
                 if print_num == 0:
                     break
 

@@ -23,8 +23,10 @@ TRANSLATIONS = {"\xc5\xbf": "s",
                 "\xc3\xa1": "a"}
 
 def excludeSection(data,section):
-    dat = re.compile('<{0}.*</{0}>'.format(section), re.DOTALL).sub('',data)
-    return dat
+    data = re.compile('<{0}.*</{0}>'.format(section), re.DOTALL).sub('',data)
+
+    return data
+
 
 def cleanUpMatch(match):
     # remove everything between double line breaks

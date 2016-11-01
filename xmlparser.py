@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import re
+import re, os
 import argparse
 from HTMLParser import HTMLParser
 
@@ -22,6 +22,11 @@ TRANSLATIONS = {"\xc5\xbf": "s",
                 "\xc3\xa9": "e",
                 "\xc3\xa1": "a"}
 
+def excludeSection(data,section):
+    data = re.compile('<{0}.*</{0}>'.format(section), re.DOTALL).sub('',data)
+
+    return data
+
 
 def cleanUpMatch(match):
     # remove everything between double line breaks
@@ -39,8 +44,9 @@ def cleanUpMatch(match):
     # remove everything between '<>'
     match = re.sub(r'<.*?>', '', match)
     
-     for char in TRANSLATIONS:
-         match = match.replace(char, TRANSLATIONS[char])
+    # translate special characters
+    for char in TRANSLATIONS:
+        match = match.replace(char, TRANSLATIONS[char])
     
     # remove extra white spaces
     match = ' '.join(match.split())
@@ -51,34 +57,43 @@ def cleanUpMatch(match):
     # always normalize to lower case
     return match.lower()
 
+
 def getAllFilesToProcess(files, directory):
-    pass
+    files_to_process = []
+    
+    if files:
+        files_to_process += files
+    
+    if directory:
+        for root, directories, file_names in os.walk(directory):
+            for file_name in file_names:
+                 files_to_process.append(os.path.join(root,file_name))
+                
+    return files_to_process
+
 
 def exportData(dict):
     pass
 
 
 def xmlParser(file, tag):
-    files = getAllFilesToProcess(args.files, args.directory)
     dict = {}
-    
-    for file in files:
-        with open(file, 'r') as f:
-            data = f.read()
-            pattern = '<{0}.*?>(.*?)</{0}>'.format(tag)
-            for match in re.compile(pattern, re.DOTALL).finditer(data):
-                print_num -=1
-                cleanMatch = cleanUpMatch(match.group())
-                if cleanMatch in dict:
-                    dict[cleanMatch] += 1
-                else:
-                    dict[cleanMatch] = 1
-    
-                if print_num < 500:
-                    print cleanMatch
-                
-                if print_num == 0:
-                    break
+
+    with open(file, 'r') as f:
+        data = f.read()
+        
+        data = excludeSection(data, 'teiHeader')
+        
+        pattern = '<{0}.*?>(.*?)</{1}>'.format(tag, tag)
+        for match in re.compile(pattern, re.DOTALL).finditer(data):
+            cleanMatch = cleanUpMatch(match.group())
+            if cleanMatch in dict:
+                dict[cleanMatch] += 1
+            else:
+                dict[cleanMatch] = 1
+
+            print cleanMatch
+
 
 if __name__ == "__main__":
 
@@ -92,5 +107,8 @@ if __name__ == "__main__":
     # requires at least '-f' or '-d' is required
     if not (args.files or args.directory):
         parser.error("At least a '-f' or a '-d' is required")
+        
+    files = getAllFilesToProcess(args.files, args.directory)
     
-    xmlParser(args.file, args.tag)
+    for file in files:
+        xmlParser(file, args.tag)

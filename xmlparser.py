@@ -68,16 +68,17 @@ def simplifyDict(dict):
     return dict
 
 
-def getAllFilesToProcess(files, directory):
+def getAllFilesToProcess(files, directories):
     files_to_process = []
     
     if files:
         files_to_process += files
     
-    if directory:
-        for root, directories, file_names in os.walk(directory):
-            for file_name in file_names:
-                 files_to_process.append(os.path.join(root,file_name))
+    if directories:
+        for directory in directories:
+            for root, directs, file_names in os.walk(directory):
+                for file_name in file_names:
+                     files_to_process.append(os.path.join(root,file_name))
                 
     return files_to_process
 
@@ -153,7 +154,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='xml parser to Samuel')
     parser.add_argument('-f', action='store', dest='files', default=[], nargs='+', help='Add files to a list')
-    parser.add_argument('-d', action='store', dest='directory', help='This will process all files in the directory')
+    parser.add_argument('-d', action='store', dest='directories', default=[], nargs='+', help='This will process all files in the directory')
     parser.add_argument('-t', action='store', dest='tag', help='xml tag', required=True)
     parser.add_argument('--version', action='version', version='%(prog)s 1.0')
     args = parser.parse_args()
@@ -162,7 +163,7 @@ if __name__ == "__main__":
     if not (args.files or args.directory):
         parser.error("At least a '-f' or a '-d' is required")
 
-    files = getAllFilesToProcess(args.files, args.directory)
+    files = getAllFilesToProcess(args.files, args.directories)
 
     for file in files:
         # parse out & count tags into a dict

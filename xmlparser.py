@@ -23,6 +23,9 @@ TRANSLATIONS = {"\xc5\xbf": "s",
                 "\xc3\xa1": "a"}
 
 def excludeSection(data,section):
+    """
+    return a text block (data) with a specific portion subbed out (bounded by <SECTION>)
+    """
     data = re.compile('<{0}.*</{0}>'.format(section), re.DOTALL).sub('',data)
 
     return data
@@ -58,6 +61,13 @@ def cleanUpMatch(match):
     return match.lower()
 
 
+def simplifyDict(dict):
+
+    pass
+
+    return dict
+
+
 def getAllFilesToProcess(files, directory):
     files_to_process = []
     
@@ -72,17 +82,52 @@ def getAllFilesToProcess(files, directory):
     return files_to_process
 
 
-def exportData(dict):
-    pass
+def extractAuthorWork(file):
+    (author, work, fileType) = file.split('.')
+
+    return author, work, fileType
+
+
+def getDate(file):
+    with open(file, 'r') as f:
+        data = f.read()
+
+        # extract '<title type = "main"...</title>' block
+        title = re.compile('<title type="main".*?</title>', re.DOTALL).findall(data)
+
+        # run cleanUp to clean formatting so raw content only
+        title = cleanUpMatch(title[0])
+
+        # last 4 characters SHOULD always be date
+        date = title[-4:]
+
+        return date
+
+
+def exportData(dict, metadata = ['author', 'work', 'date']):
+
+    for match in dict:
+        outLine = '\t'.join(metadata) + "\t" + match + "\t" + str(dict[match])
+
+        print outLine
+
 
 
 def xmlParser(file, tag):
+    '''
+    Restructured so this only parses, doesn't return.
+    Removed the "print cleanMatch" since now that is exportData's job
+    Hence, this now returns dict, which exportData then takes, with any associated metadata, and prints all at you
+    '''
+
     dict = {}
 
     with open(file, 'r') as f:
         data = f.read()
-        
-        data = excludeSection(data, 'teiHeader')
+
+        # exclude specific sections teiHeader, front, back
+        for section in ['teiHeader', 'front', 'back']:
+            data = excludeSection(data=data, section=section)
         
         pattern = '<{0}.*?>(.*?)</{1}>'.format(tag, tag)
         for match in re.compile(pattern, re.DOTALL).finditer(data):
@@ -92,7 +137,11 @@ def xmlParser(file, tag):
             else:
                 dict[cleanMatch] = 1
 
-            print cleanMatch
+        # run simplifyDict to try to combine easily detectable overlaps like 'lex ington' vs 'lexington'
+        dict = simplifyDict(dict)
+
+        return dict
+
 
 
 if __name__ == "__main__":
@@ -103,12 +152,24 @@ if __name__ == "__main__":
     parser.add_argument('-t', action='store', dest='tag', help='xml tag', required=True)
     parser.add_argument('--version', action='version', version='%(prog)s 1.0')
     args = parser.parse_args()
-    
+
     # requires at least '-f' or '-d' is required
     if not (args.files or args.directory):
         parser.error("At least a '-f' or a '-d' is required")
-        
+
     files = getAllFilesToProcess(args.files, args.directory)
-    
+
     for file in files:
-        xmlParser(file, args.tag)
+        # parse out & count tags into a dict
+        counts = xmlParser(file, args.tag)
+
+        # get author, work from that filename
+        author, work = extractAuthorWork(file)[0:2]
+
+        # get date from the file
+        date = getDate(file)
+
+        # export counts
+        exportData(counts, metadata=[author, work, date])
+
+

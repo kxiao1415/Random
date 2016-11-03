@@ -105,13 +105,18 @@ def getDate(file):
         return date
 
 
-def exportData(dict, metadata = ['author', 'work', 'date']):
+def exportData(dict, metadata=[]):
 
-    for match in dict:
-        outLine = '\t'.join(metadata) + "\t" + match + "\t" + str(dict[match])
+    if metadata:
+        for match in dict:
+            outLine = '\t'.join(metadata) + "\t" + match + "\t" + str(dict[match])
 
-        print outLine
+            print outLine
+    else:
+        for match in dict:
+            outLine = '\t'.join(metadata) + "\t" + match + "\t" + str(dict[match])
 
+            print outLine
 
 
 def xmlParser(file, tag):

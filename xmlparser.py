@@ -2,8 +2,12 @@
 
 import re, os
 import argparse
+import yaml
 from HTMLParser import HTMLParser
 
+
+with open("config.yml", 'r') as config:
+    CONFIG = yaml.load(config)
 
 TRANSLATIONS = {"\xc5\xbf": "s",
                 "\xc5\x93": "oe",
@@ -22,11 +26,12 @@ TRANSLATIONS = {"\xc5\xbf": "s",
                 "\xc3\xa9": "e",
                 "\xc3\xa1": "a"}
 
-def excludeSection(data,section):
+
+def excludeSection(data, section):
     """
     return a text block (data) with a specific portion subbed out (bounded by <SECTION>)
     """
-    data = re.compile('<{0}.*</{0}>'.format(section), re.DOTALL).sub('',data)
+    data = re.compile('<{0}.*?>.*?</{0}>'.format(section), re.DOTALL).sub('',data)
 
     return data
 
@@ -83,10 +88,10 @@ def getAllFilesToProcess(files, directories):
     return files_to_process
 
 
-def extractAuthorWork(file):
-    (author, work, fileType) = file.split('.')
+def extractAuthorWork(fileName):
+    (author, work, fileType) = fileName.split('.')
 
-    return author, work, fileType
+    return author, work
 
 
 def getDate(file):
@@ -119,23 +124,22 @@ def exportData(dict, metadata=[]):
             print outLine
 
 
-def xmlParser(file, tag):
+def xmlParser(file):
     '''
     Restructured so this only parses, doesn't return.
     Removed the "print cleanMatch" since now that is exportData's job
     Hence, this now returns dict, which exportData then takes, with any associated metadata, and prints all at you
     '''
-
     dict = {}
 
     with open(file, 'r') as f:
         data = f.read()
 
-        # exclude specific sections teiHeader, front, back
-        for section in ['teiHeader', 'front', 'back']:
+        # exclude specific sections, such as teiHeader, front and back
+        for section in CONFIG['exclude']:
             data = excludeSection(data=data, section=section)
         
-        pattern = '<{0}.*?>(.*?)</{1}>'.format(tag, tag)
+        pattern = '<{0}.*?>(.*?)</{0}>'.format(CONFIG['tag'])
         for match in re.compile(pattern, re.DOTALL).finditer(data):
             cleanMatch = cleanUpMatch(match.group())
             if cleanMatch in dict:
@@ -155,27 +159,25 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='xml parser to Samuel')
     parser.add_argument('-f', action='store', dest='files', default=[], nargs='+', help='Add files to a list')
     parser.add_argument('-d', action='store', dest='directories', default=[], nargs='+', help='This will process all files in the directory')
-    parser.add_argument('-t', action='store', dest='tag', help='xml tag', required=True)
     parser.add_argument('--version', action='version', version='%(prog)s 1.0')
     args = parser.parse_args()
-
+    
     # requires at least '-f' or '-d' is required
     if not (args.files or args.directory):
         parser.error("At least a '-f' or a '-d' is required")
-
+    
     files = getAllFilesToProcess(args.files, args.directories)
-
+    
     for file in files:
         # parse out & count tags into a dict
-        counts = xmlParser(file, args.tag)
-
-        # get author, work from that filename
-        author, work = extractAuthorWork(file)[0:2]
-
-        # get date from the file
-        date = getDate(file)
-
+        parserResult = xmlParser(file)
+    
+        if CONFIG['extract_meta_info']:
+            # get author, work from that filename
+            author, work = extractAuthorWork(file)
+    
+            # get date from the file
+            date = getDate(file)
+    
         # export counts
-        exportData(counts, metadata=[author, work, date])
-
-
+        exportData(parserResult, metadata=[author, work, date])

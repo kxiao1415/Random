@@ -1,0 +1,3 @@
+tag: 'placeName'
+exclude: ['teiHeader', 'front', 'back']
+'extract_meta_info': True

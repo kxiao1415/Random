@@ -2,6 +2,7 @@
 
 import re, os
 import argparse
+from sets import Set
 import yaml
 from HTMLParser import HTMLParser
 
@@ -64,13 +65,6 @@ def cleanUpMatch(match):
 
     # always normalize to lower case
     return match.lower()
-
-
-def simplifyDict(dict):
-
-    pass
-
-    return dict
 
 
 def getAllFilesToProcess(files, directories):
@@ -142,13 +136,17 @@ def xmlParser(file):
         pattern = '<{0}.*?>(.*?)</{0}>'.format(CONFIG['tag'])
         for match in re.compile(pattern, re.DOTALL).finditer(data):
             cleanMatch = cleanUpMatch(match.group())
-            if cleanMatch in dict:
-                dict[cleanMatch] += 1
+            
+            # remove all non-alphabet chars from match
+            regex = re.compile('[^a-zA-Z0-9]')
+            non_alphabet_form = regex.sub('', cleanMatch)
+            
+            if non_alphabet_form in dict:
+                dict[non_alphabet_form]['count'] += 1
+                dict[non_alphabet_form]['variation '].add(cleanMatch)
             else:
-                dict[cleanMatch] = 1
-
-        # run simplifyDict to try to combine easily detectable overlaps like 'lex ington' vs 'lexington'
-        dict = simplifyDict(dict)
+                dict[non_alphabet_form] = {'variations': Set([cleanMatch]),
+                                           'count': 1}
 
         return dict
 
@@ -163,7 +161,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # requires at least '-f' or '-d' is required
-    if not (args.files or args.directory):
+    if not (args.files or args.directories):
         parser.error("At least a '-f' or a '-d' is required")
     
     files = getAllFilesToProcess(args.files, args.directories)

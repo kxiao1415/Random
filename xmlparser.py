@@ -105,17 +105,15 @@ def getDate(file):
 
 
 def exportData(dict, metadata=[]):
-
-    if metadata:
-        for match in dict:
-            outLine = '\t'.join(metadata) + "\t" + match + "\t" + str(dict[match])
-
-            print outLine
-    else:
-        for match in dict:
-            outLine = '\t'.join(metadata) + "\t" + match + "\t" + str(dict[match])
-
-            print outLine
+    for match, value in sorted(dict.items()):
+        variations = list(value['variations'])
+        variations_to_string = '|'.join(variations)
+        if metadata:
+            outLine = '\t'.join(metadata) + "\t" + variations[0] + "\t" + variations_to_string + "\t" + str(value['count'])
+        else:
+            outLine = variations[0] + "\t" + variations_to_string + "\t" + str(value['count'])
+            
+        print outLine
 
 
 def xmlParser(file):
@@ -123,6 +121,13 @@ def xmlParser(file):
     Restructured so this only parses, doesn't return.
     Removed the "print cleanMatch" since now that is exportData's job
     Hence, this now returns dict, which exportData then takes, with any associated metadata, and prints all at you
+    
+    dict is of this form: {'u.s.': {'variations': Set(['u.s.', 'us', 'u-s']),
+                                    'count': 7},
+                           'russia': {'variations': Set(['russia', 'r ussia', 'ru-ssia']),
+                                      'count': 7}
+                          }
+    
     '''
     dict = {}
 
@@ -143,13 +148,12 @@ def xmlParser(file):
             
             if non_alphabet_form in dict:
                 dict[non_alphabet_form]['count'] += 1
-                dict[non_alphabet_form]['variation '].add(cleanMatch)
+                dict[non_alphabet_form]['variations'].add(cleanMatch)
             else:
                 dict[non_alphabet_form] = {'variations': Set([cleanMatch]),
                                            'count': 1}
-
+        
         return dict
-
 
 
 if __name__ == "__main__":
